@@ -1,0 +1,4 @@
+# Solo para el cliente local; Lambda ya incluye boto3 en su runtime Python.
+boto3==1.43.114
+# El extra crt permite usar los perfiles creados con aws login.
+botocore[crt]==1.43.114

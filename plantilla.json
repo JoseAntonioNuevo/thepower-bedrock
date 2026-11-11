@@ -1,0 +1,98 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "S17: HTTP API con IAM, Lambda Python y Nova Lite dentro de eu-north-1.",
+  "Parameters": {
+    "AppVersion": {"Type": "String", "Description": "Hash del codigo, insertado por preparar.py"}
+  },
+  "Resources": {
+    "LogsLambda": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {"LogGroupName": {"Fn::Sub": "/aws/lambda/${AWS::StackName}"}, "RetentionInDays": 3}
+    },
+    "LogsApi": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {"LogGroupName": {"Fn::Sub": "/s17/${AWS::StackName}/http"}, "RetentionInDays": 3}
+    },
+    "RolLambda": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [
+          {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
+        ]},
+        "Policies": [{"PolicyName": "modelo-y-logs", "PolicyDocument": {
+          "Version": "2012-10-17", "Statement": [
+            {"Effect": "Allow", "Action": "bedrock:InvokeModel", "Resource": {"Fn::Sub": "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.nova-lite-v1:0"}},
+            {"Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"], "Resource": {"Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:log-stream:*"}}
+          ]
+        }}]
+      }
+    },
+    "Funcion": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {"Ref": "AWS::StackName"},
+        "Description": "Clasificador docente: un intento de Nova Lite por incidencia valida",
+        "Runtime": "python3.12", "Architectures": ["x86_64"],
+        "Handler": "index.lambda_handler", "MemorySize": 512, "Timeout": 24,
+        "Role": {"Fn::GetAtt": ["RolLambda", "Arn"]},
+        "Environment": {"Variables": {"BEDROCK_MODEL_ID": "amazon.nova-lite-v1:0", "APP_VERSION": {"Ref": "AppVersion"}}},
+        "Code": {"ZipFile": "# preparar.py inserta aqui lambda_function.py\n"}
+      }
+    },
+    "Api": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {"Name": {"Ref": "AWS::StackName"}, "ProtocolType": "HTTP"}
+    },
+    "Integracion": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {"Ref": "Api"}, "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {"Fn::GetAtt": ["Funcion", "Arn"]},
+        "PayloadFormatVersion": "2.0", "TimeoutInMillis": 29000
+      }
+    },
+    "RutaClasificar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {"ApiId": {"Ref": "Api"}, "RouteKey": "POST /clasificar", "AuthorizationType": "AWS_IAM", "Target": {"Fn::Join": ["/", ["integrations", {"Ref": "Integracion"}]]}}
+    },
+    "RutaHealth": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {"ApiId": {"Ref": "Api"}, "RouteKey": "GET /health", "AuthorizationType": "AWS_IAM", "Target": {"Fn::Join": ["/", ["integrations", {"Ref": "Integracion"}]]}}
+    },
+    "PermisoClasificar": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "Funcion"}, "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com", "SourceAccount": {"Ref": "AWS::AccountId"},
+        "SourceArn": {"Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/$default/POST/clasificar"}
+      }
+    },
+    "PermisoHealth": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "Funcion"}, "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com", "SourceAccount": {"Ref": "AWS::AccountId"},
+        "SourceArn": {"Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/$default/GET/health"}
+      }
+    },
+    "Stage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {"Ref": "Api"}, "StageName": "$default", "AutoDeploy": true,
+        "DefaultRouteSettings": {"ThrottlingBurstLimit": 1, "ThrottlingRateLimit": 1},
+        "AccessLogSettings": {
+          "DestinationArn": {"Fn::GetAtt": ["LogsApi", "Arn"]},
+          "Format": "{\"requestId\":\"$context.requestId\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"integrationError\":\"$context.integrationErrorMessage\"}"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ApiId": {"Value": {"Ref": "Api"}},
+    "ApiUrl": {"Value": {"Fn::GetAtt": ["Api", "ApiEndpoint"]}},
+    "Funcion": {"Value": {"Ref": "Funcion"}},
+    "LogsLambda": {"Value": {"Ref": "LogsLambda"}},
+    "LogsApi": {"Value": {"Ref": "LogsApi"}},
+    "PermisoCliente": {"Value": {"Fn::Sub": "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/$default/POST/clasificar"}}
+  }
+}

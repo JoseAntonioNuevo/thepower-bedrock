@@ -1,0 +1,70 @@
+{
+  "region": "eu-north-1",
+  "fecha_lectura": "2026-11-11",
+  "model_id": "amazon.nova-lite-v1:0",
+  "rates": {
+    "lambda_gbs": {
+      "service": "AWSLambda",
+      "sku": "7N49FRQMXS49C2QS",
+      "usage": "EUN1-Lambda-GB-Second",
+      "usd": "0.0000166667",
+      "unit": "Lambda-GB-Second",
+      "effective": "2026-10-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSLambda/current/eu-north-1/index.json"
+    },
+    "lambda_request": {
+      "service": "AWSLambda",
+      "sku": "KERWZD8CJ22SEZWT",
+      "usage": "EUN1-Request",
+      "usd": "0.0000002000",
+      "unit": "Request",
+      "effective": "2026-10-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSLambda/current/eu-north-1/index.json"
+    },
+    "api_request": {
+      "service": "AmazonApiGateway",
+      "sku": "863ZPQVR2S7G7A5N",
+      "usage": "EUN1-ApiGatewayHttpRequest",
+      "usd": "0.0000010600",
+      "unit": "Requests",
+      "effective": "2026-10-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonApiGateway/current/eu-north-1/index.json"
+    },
+    "logs_ingest_gb": {
+      "service": "AmazonCloudWatch",
+      "sku": "2WXCZPMH3FF7XAAZ",
+      "usage": "EUN1-DataProcessing-Bytes",
+      "usd": "0.5400000000",
+      "unit": "GB",
+      "effective": "2026-11-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonCloudWatch/current/eu-north-1/index.json"
+    },
+    "logs_store_gb_month": {
+      "service": "AmazonCloudWatch",
+      "sku": "FC3W9RUMP83VDX52",
+      "usage": "EUN1-TimedStorage-ByteHrs",
+      "usd": "0.0280000000",
+      "unit": "GB-Mo",
+      "effective": "2026-11-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonCloudWatch/current/eu-north-1/index.json"
+    },
+    "input_1k": {
+      "service": "AmazonBedrock",
+      "sku": "5B2T2U8FNRYYV6G4",
+      "usage": "EUN1-NovaLite-input-tokens",
+      "usd": "0.0000650000",
+      "unit": "1K tokens",
+      "effective": "2026-11-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/eu-north-1/index.json"
+    },
+    "output_1k": {
+      "service": "AmazonBedrock",
+      "sku": "E4Z3PKDHV45PZQMB",
+      "usage": "EUN1-NovaLite-output-tokens",
+      "usd": "0.0002600000",
+      "unit": "1K tokens",
+      "effective": "2026-11-01T00:00:00Z",
+      "source": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrock/current/eu-north-1/index.json"
+    }
+  }
+}
